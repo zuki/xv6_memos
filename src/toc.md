@@ -8,6 +8,11 @@
   - [第12章 システムタイマー](arm/bcm2837/12_system_timer.md)
   - [第14章 ARMタイマー](arm/bcm2837/14_arm_timer.md)
   - [第15章 USB](arm/bcm2837/15_usb.md)
+- [LAN7800データ仕様](arm/lan7800/README.md)
+  - [第2章 はじめに](arm/lan7800/02_intro.md)
+  - [第6章 FIFOコントローラ](arm/lan7800/06_fifo.md)
+  - [第8章 10/100/1000 Ethernet MAC](arm/lan7800/08_ethernet.md)
+  - [第15章 レジスタ記述](arm/lan7800/15_register.md)
 - [Programmer’s Guide for ARMv8-A](arm/programmer_guide/README.md)
   - [目次](arm/programmer_guide/00_index.md)
   - [1章 はじめに](arm/programmer_guide/01_intro.md)
@@ -52,8 +57,13 @@
   - [ピンリファレンス](raspi/firmware_wiki/pin.md)
   - [USB MSDとネットワークブートによるデバッグ](raspi/firmware_wiki/debug.md)
 
-# その他の規格の翻訳
+# 規格の翻訳
 
+- [USB 2.0仕様書](specs/usb/README.md)
+  - [第8章 プロトコルレイヤ](specs/usb/chap_08.md)
+  - [第9章 USBデバイスフレームワーク](specs/usb/chap_09.md)
+  - [第10章 USBホスト](specs/usb/chap_10.md)
+  - [第11章 ハブ規格](specs/usb/chap_11.md)
 - [SDCard規格の極一部](specs/sdcard_spec.md)
 - [The Second Extended File System](specs/ext2_layout.md)
 - [ELF hwcaps](specs/elf_hwcaps.md)
@@ -86,13 +96,17 @@
   - [第8章](articles/exploring_aarch64_assembler/chap8.md)
   - [第9章](articles/exploring_aarch64_assembler/chap9.md)
 - [AArch64アセンブリガイド](articles/gaa/guide_aarch64_assembly.md)
-- [kern/sd.cの関数一覧](articles/sd_functions.md)
 - [GCC specファイル文法](articles/gcc-specs.md)
 - [Wenbo Shen: AArch64 Kernel Page Tables](articles/aarch64_kernel_pt.md)
 - [A Virtual Filesystem Layer implementation in the XV6 Operating System](articles/vfs_xv6.md)
 - [MIT演習: MMAP](articles/mit_lab_mmap.md)
-- [rpi-osのREADME](articles/rpi-os-readme.md)
-- [dashのTOUR文書](articles/dash_tour.md)
+
+# その他資料の翻訳
+
+- [kern/sd.cの関数一覧](others/sd_functions.md)
+- [Linuxのdrivers/net/usb/Kconfig](others/linux_net_usb_kconfig.md)
+- [rpi-osのREADME](others/rpi-os-readme.md)
+- [dashのTOUR文書](others/dash_tour.md)
 
 # Fudan作業メモ
 
@@ -152,6 +166,7 @@
 - [USB機能の追加の試み](rpios_memos/usb.md)
 - [VIM追加の試み](rpios_memos/vim.md)
 - [FAT32ファイルシステム](rpios_memos/fat.md)
+- [eggman氏によるUSBコントロール転送](rpios_memos/eggman.md)
 
 # XV6講義資料の翻訳
 

@@ -242,3 +242,287 @@ That's all folks
 # date
 Tue Jun 21 10:32:25 JST 2022
 ```
+
+## CLOCK_PROCESS_CPUTIME_ID 対応を少し真面目に実装
+
+- process->stime, utimeをtimer()割り込み時に増分
+- user_modeを判別
+- ptimeがTick単位だったのをナノ秒に変換
+- QEMUと実機でtimerfreq()の返す値が違った
+
+```diff
+dspace@mini:~/xv6-raspi/mac-rpi-os$ git diff
+diff --git a/inc/irq.h b/inc/irq.h
+index 0f789e3..19ee9db 100644
+--- a/inc/irq.h
++++ b/inc/irq.h
+@@ -32,6 +32,6 @@ void irq_init();
+ void irq_enable(int);
+ void irq_disable(int);
+ void irq_register(int, void (*)());
+-void irq_handler();
++void irq_handler(int);
+
+ #endif
+diff --git a/kern/clock.c b/kern/clock.c
+index 673e4c9..53f1f58 100644
+--- a/kern/clock.c
++++ b/kern/clock.c
+@@ -94,7 +94,7 @@ void
+ clock_intr()
+ {
+     ++jiffies;
+-    thisproc()->stime = jiffies * 1000000000 / HZ;
++    //thisproc()->stime = jiffies * 1000000000 / HZ;
+     trace("c: %d", jiffies);
+     update_times();
+     run_timer_list();
+@@ -114,7 +114,8 @@ clock_gettime(clockid_t clk_id, struct timespec *tp)
+             tp->tv_sec = xtime.tv_sec;
+             break;
+         case CLOCK_PROCESS_CPUTIME_ID:
+-            ptime = thisproc()->stime + thisproc()->utime;
++            struct proc *p = thisproc();
++            ptime = (p->stime + p->utime) * TICK_NSEC;
+             tp->tv_nsec = ptime % 1000000000;
+             tp->tv_sec  = ptime / 1000000000;
+             break;
+diff --git a/kern/irq.c b/kern/irq.c
+index fbcd76c..00737b6 100644
+--- a/kern/irq.c
++++ b/kern/irq.c
+@@ -235,14 +235,14 @@ handle1(int i)
+ }
+
+ void
+-irq_handler()
++irq_handler(int user_mode)
+ {
+     int nack = 0;
+ #ifndef USE_GIC
+     int src = get32(IRQ_SRC_CORE(cpuid()));
+     assert(!(src & ~(IRQ_SRC_CNTPNSIRQ | IRQ_SRC_GPU | IRQ_SRC_TIMER)));
+     if (src & IRQ_SRC_CNTPNSIRQ) {
+-        timer_intr();
++        timer_intr(user_mode);
+         nack++;
+     }
+     if (src & IRQ_SRC_TIMER) {
+diff --git a/kern/timer.c b/kern/timer.c
+index 0ae618b..c4710a0 100644
+--- a/kern/timer.c
++++ b/kern/timer.c
+@@ -7,6 +7,7 @@
+ #include "proc.h"
+ #include "list.h"
+ #include "spinlock.h"
++#include "rtc.h"
+
+ /* Core Timer */
+ #define CORE_TIMER_CTRL(i)      (LOCAL_BASE + 0x40 + 4*(i))
+@@ -15,13 +16,26 @@
+ static uint64_t dt;
+ static uint64_t cnt;
+
++static update_proc_time(int user_mode)
++{
++    struct proc *p = thisproc();
++    if (user_mode)
++        p->utime++;
++    else
++        p->stime++;
++}
++
+ void
+ timer_init()
+ {
+-    dt = timerfreq() / HZ;       // 10 ms
++#ifdef USING_RASPI
++    dt = timerfreq() / HZ;       // 10 ms = 19.2 * 10^6 / 100
++#else
++    dt = 62500000UL / HZ;       // QEMUはtimerfreq()で得られる値が実機と違う
++#endif
++    info("timerfreq = 0x%llx", timerfreq());
+     asm volatile ("msr cntp_ctl_el0, %[x]"::[x] "r"(1));    // Physical Timer enable
+     asm volatile ("msr cntp_tval_el0, %[x]"::[x] "r"(dt));  // Set counter of physica timer
+-// asm volatile ("msr cntp_cval_el0, %[x]"::[x] "r"(ct));   // Set compare time
+     put32(CORE_TIMER_CTRL(cpuid()), CORE_TIMER_ENABLE);     // core timer enable
+ #ifdef USE_GIC
+     irq_enable(IRQ_LOCAL_CNTPNS);
+@@ -40,10 +54,15 @@ timer_reset()
+  * which is determined by cpu clock (may be tuned for power saving).
+  */
+ void
+-timer_intr()
++timer_intr(int user_mode)
+ {
+-    trace("t: %d", ++cnt);
++#if 0
++    if (cpuid() == 0 && ++cnt % 100) {
++        info("cnt=%lld, jif=%lld", cnt, jiffies);
++    }
++#endif
+     timer_reset();
++    update_proc_time(user_mode);
+     // プリエンプション
+     yield();
+ }
+diff --git a/kern/trap.c b/kern/trap.c
+index cdb6fdd..dc180bb 100644
+--- a/kern/trap.c
++++ b/kern/trap.c
+@@ -18,6 +18,12 @@ extern long syscall1(struct trapframe *);
+ static long pf_handler(int dfs, uint64_t far);
+ void trap_error(uint64_t type);
+
++#define PSR_MODE_EL0t   0x00000000
++#define PSR_MODE_MASK   0x0000000F
++
++#define user_mode(tf) \
++    (((int)((tf)->spsr) & PSR_MODE_MASK) == PSR_MODE_EL0t)
++
+ void
+ trap_init()
+ {
+@@ -42,7 +48,7 @@ trap(struct trapframe *tf)
+         if (il) {
+             debug("IL bit on");
+         } else {
+-            irq_handler();
++            irq_handler(user_mode(tf));
+         }
+         check_pending_signal();
+         break;
+```
+
+## QEMUの場合は相変わらず大いにずれる
+
+```
+# timertest
+       Elapsed   Value Interval
+START:    0.00
+clock=60000
+Main:     0.36    1.65    0.00
+Main:     0.75    1.27    0.00
+Main:     1.08    0.94    0.00
+Main:     1.47    0.55    0.00
+Main:     1.85    0.17    0.00
+ALARM:    2.02    0.00    0.00
+That's all folks
+# timertest 2 0 1 0
+       Elapsed   Value Interval
+START:    0.00
+clock=50000
+Main:     0.33     inf     nan
+Main:     0.69    1.32    1.00
+Main:     1.06    0.95    1.00
+Main:     1.44    0.57    1.00
+Main:     1.78    0.23    1.00
+ALARM:    2.01    1.00    1.00
+Main:     2.17    0.84    1.00
+Main:     2.55    0.46    1.00
+Main:     2.96    0.05    1.00
+ALARM:    3.01    1.00    1.00
+Main:     3.36    0.65    1.00
+Main:     3.70    0.31    1.00
+ALARM:    4.01    1.00    1.00
+That's all folks
+```
+
+## 実機はほぼ正しい結果となった
+
+```
+# timertest
+       Elapsed   Value Interval
+START:    0.00
+clock=10000
+Main:     0.49    1.51    0.00
+Main:     0.99    1.01    0.00
+Main:     1.49    0.51    0.00
+Main:     1.98    0.02    0.00
+ALARM:    2.00    0.00    0.00
+That's all folks
+# timertest 2 0 1 0
+       Elapsed   Value Interval
+START:    0.00
+clock=10000
+Main:     0.49    1.51    1.00
+Main:     0.99    1.01    1.00
+Main:     1.49    0.51    1.00
+Main:     1.99    0.01    1.00
+ALARM:    2.00    1.00    1.00
+Main:     2.49    0.51    1.00
+Main:     2.99    0.01    1.00
+ALARM:    3.00    1.00    1.00
+Main:     3.49    0.51    1.00
+Main:     3.99    0.01    1.00
+ALARM:    4.00    1.00    1.00
+That's all folks
+```
+
+## カウンタタイマー物理タイマーに関するレジスタ: Counter-timer Phyical Timer Registers
+
+### CNTP_CTL_EL0: 制御レジスタ: Control register
+
+ISTATUS, bit [2]: 1: タイマー条件が成立
+IMASK,   bit [1]: 1: タイマー割り込みをマスク（割り込みしな）
+ENABLE,  bit [0]: 1: タイマーを有効にする
+
+### CNTPCT_EL0: カウントレジスタ: Count register
+
+64-bit 物理カウント値を保持する。
+
+EL0またはEL1からのCNTPCT_EL0の読み出しはアクセス例外とはならず、以下の全てが真であれば、
+(PhysicalCountInt<63:0> - CNTPOFF_EL2<63:0>) が返される。
+
+- CNTHCTL_EL2.ECVが1である。
+- HCR_EL2.{E2H,TGE}が{1,1}でない。
+
+PhysicalCountInt<63:0>は、CNTPCT_EL0がEL2またはEL3から読み出されたときに返される物理カウントである。
+
+### CNTP_TVAL_EL0: タイマー値レジスタ: TimerValue regist
+
+このレジスタの読み出しは
+
+    CNTP_CTL_EL0.ENABLE が 0 の場合、返される値は UNKNOWN である。
+    CNTP_CTL_EL0.ENABLE が 1 の場合、返される値は (CNTP_CVAL_EL0 - CNTPCT_EL0) である。
+
+このレジスタに書き込むと、CNTP_CVAL_EL0が（CNTPCT_EL0 + TimerValue）に設定される。
+TimerValueは符号付き32ビット整数として扱われる。
+
+CNTP_CTL_EL0.ENABLEが1の時は、 (CNTPCT_EL0 - CNTP_CVAL_EL0)が0以上の時にタイマー条件が
+成立する。つまり、TimerValueは32bitダウンカウンタータイマーと同じように動作する。
+タイマーの条件が成立した場合、
+
+- CNTP_CTL_EL0.ISTATUSが1に設定される。
+- CNTP_CTL_EL0.IMASKが0であれば、割り込みが発生する。
+
+CNTP_CTL_EL0.ENABLEが0の場合、タイマーの条件は成立しないが、CNTPCT_EL0はカウントし続けるので
+TimerValueビューはカウントダウンし続けるように見える。
+
+### CNTP_CVAL_EL0: コンペア値レジスタ: CompareValue register
+
+EL1物理タイマーのコンペア値を保持する。
+
+CNTP_CTL_EL0.ENABLEが1の時、（CNTPCT_EL0 - CompareValue）が0以上の時にタイマーの条件が
+成立する。これはCompareValueが64ビットアップカウンタータイマーのように動作することを
+意味する。タイマーの条件が成立した場合、
+
+- CNTP_CTL_EL0.ISTATUSが1に設定される。
+- CNTP_CTL_EL0.IMASKが0であれば、割り込みが発生する。
+
+CNTP_CTL_EL0.ENABLEが0の場合、タイマー条件は成立しないが、CNTPCT_EL0はカウントを続ける。
+
+このフィールドの値はすべてのカウンタ計算においてゼロ拡張で扱われる。
+
+### CNTFRQ_EL0, Counter-timer Frequency register
+
+クロック周波数。システムカウンターのクロック周波数をHzで示す。
+
+このレジスタはソフトウェアがシステムカウンタの周波数を検出できるように
+するために提供されている。システムの初期化の一部としてこの値を
+プログラムする必要がある。このレジスタの値は、ハードウェアによって
+解釈されることはない。
+
+**注**: Raspi3B+では`boot/armstub8.S`で19,200.000 (仕様書とおり。
+ただし、QEMUでは62,500,000となる)に設定されている。

@@ -31,3 +31,4 @@
 - [USB機能の追加の試み](usb.md)
 - [VIM追加の試み](vim.md)
 - [FAT32ファイルシステム](fat.md)
+- [eggman氏によるUSBコントロール転送](eggman.md)
