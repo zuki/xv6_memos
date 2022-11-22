@@ -133,6 +133,62 @@ bus: main-system-bus
 - USE_USB_SOF_INTRは当面undef
 - USE_USB_FIQはundef
 
+## usbhc_init()のコールシーケンス
+
+```
+usbhc_init
+	dw2_hc
+		dw2_rport
+	dw2_hc_init
+		dw2_hc_power_on: MBOX使用
+		irq_enable, irq_register
+		dw2_hc_init_core
+			dw2_hc_reset
+				dw2_hc_wait_for_bit
+			dw2_hc_enable_common_intr
+		dw2_hc_enable_global_intr
+		dw2_hc_init_host
+			dw2_hc_flush_tx_fifo
+				dw2_hc_wait_for_bit
+			dw2_hc_flush_rx_fifo
+				dw2_hc_wait_for_bit
+			dw2_hc_enable_host_intr
+				dw2_hc_enable_common_intr
+		dw2_hc_rescan_dev
+			dw2_hc_enable_rport
+				dw2_hc_wait_for_bit
+			dw2_rport_init
+				usb_device
+				usb_dev_init
+					dw2_hc_get_desc: 8バイトデバイスディスクリプタ
+						dw2_hc_control_message
+							usb_request
+							dw2_hc_submit_block_request
+								dw2_hc_xfer_stage
+									usb_req_set_comp_cb
+									dw2_hc_xfer_stage_async
+										dw2_xfer_stagedata
+											dw2_fsched_nsplit
+										dw2_hc_enable_channel_intr
+										dw2_hc_start_trans
+											dw2_hc_start_channel
+					dw2_hc_get_desc: 正式なdeviceディスクリプタ
+					dw2_hc_set_addr: アドレス設定
+						dw2_hc_control_message
+					dw2_hc_get_desc: 8バイトコンフィグレーションディスクリプタ
+					dw2_hc_get_desc: 正式なコンフィグレーションディスクリプタ
+					cfg_parser
+					usb_string_get_from_desc
+						dw2_hc_control_message
+					cfg_parser_get_desc
+					usb_devfactory_get_device
+				usb_dev_config
+					dw2_hc_set_config
+						dw2_hc_control_message
+						usb_func->configure(usb_func)
+				dw2_hc_overcurrent_detected
+```
+
 ## USBの初期設定を実行
 
 - フレームを送信して終了を待つが、少量条件を満たさず無限ループ
@@ -786,4 +842,227 @@ QEMU: Terminated
 [1]usb_dev_init: Function is not supported
 [1]usb_dev_init: Device has no supported function
 QEMU: Terminated
+```
+
+```
+[3]free_range: 0xffff000000348000 ~ 0xffff00003b400000, 241848 pages
+[3]timer_init: timerfreq = 0x3b9aca0
+[1]timer_init: timerfreq = 0x3b9aca0
+[2]timer_init: timerfreq = 0x3b9aca0
+[3]main: cpu 3 init finished
+[2]main: cpu 2 init finished
+[1]main: cpu 1 init finished
+[0]timer_init: timerfreq = 0x3b9aca0
+[0]main: cpu 0 init finished
+[1]forkret: proc 'idle'(4)
+[2]forkret: proc 'idle'(3)
+[0]forkret: proc 'idle'(5)
+[2]iinit: sb: size 100000 nblocks 99835 ninodes 1024 nlog 126 logstart 2 inodestart 128 bmapstart 161
+[3]initlog: init log ok
+[2]usb_dev_init: Device ven409-55aa, dev9-0-0 found
+[2]usbhc_init: dw2hc initialized
+
+[2]forkret: proc 'icode'(1)
+QEMU: Terminated
+
+```
+
+```
+[2]free_range: 0xffff000000348000 ~ 0xffff00003b400000, 241848 pages
+[2]timer_init: timerfreq = 0x3b9aca0
+[1]timer_init: timerfreq = 0x3b9aca0
+[2]main: cpu 2 init finished
+[1]main: cpu 1 init finished
+[3]timer_init: timerfreq = 0x3b9aca0
+[3]main: cpu 3 init finished
+[0]timer_init: timerfreq = 0x3b9aca0
+[0]main: cpu 0 init finished
+[1]forkret: proc 'idle'(3)
+[3]forkret: proc 'idle'(4)
+[2]forkret: proc 'idle'(2)
+[1]iinit: sb: size 100000 nblocks 99835 ninodes 1024 nlog 126 logstart 2 inodestart 128 bmapstart 161
+[1]initlog: init log ok
+[1]forkret: proc 'icode'(1)
+[2]forkret: proc ''(6)
+[0]forkret: proc ''(7)
+[2]forkret: proc ''(8)
+[0]forkret: proc ''(9)
+[2]forkret: proc ''(10)
+[3]forkret: proc ''(11)
+[2]mount: source: /dev/sdc3, target: /mnt, type: ext2, flags: 0x0
+[0]forkret: proc ''(12)
+
+[3]fileopen: cant namei /etc/issue
+Welcome to xv6 2022-06-26 (musl) mini tty
+
+mini login: root
+Password:
+[0]fileopen: cant namei /etc/profile
+[0]fileopen: cant namei /.profile
+# QEMU: Terminated
+```
+
+## keyboard.cを追加
+
+```
+2]usb_dev_init: Device ven409-55aa, dev9-0-0 found
+[2]usb_dev_init: Product: QEMU QEMU USB Hub
+[2]usb_func_get_if_name: func name=int9-0-0
+[2]usb_dev_init: Interface int9-0-0 found
+[2]usb_devfactory_get_device: Using device/interface int9-0-0
+[2]usb_stdhub_enumerate_ports: start
+[2]usb_dev_init: Device ven627-1 found
+[2]usb_dev_init: Product: QEMU QEMU USB Keyboard
+[2]usb_func_get_if_name: func name=int3-1-1
+[2]usb_dev_init: Interface int3-1-1 found
+[2]usb_devfactory_get_device: Using device/interface int3-1-1
+[2]usb_dev_config: 0 is ok
+[2]usb_stdhub_enumerate_ports: Port 1: Device configured
+[0]dw2_hc_timer_hdl: st=0
+kern/usb/dw2hcd.c:1242: assertion failed.
+kern/console.c:348: kernel panic at cpu 0.
+```
+
+## keyboardではなくnetを要項にして実行
+
+- `-netdev user,id=net0,hostfwd=tcp::8080-:80 -device usb-net,netdev=net0`
+
+```
+[3]usb_dev_init: Device ven409-55aa, dev9-0-0 found
+[3]usb_dev_init: Product: QEMU QEMU USB Hub
+[3]usb_func_get_if_name: func name=int9-0-0
+[3]usb_dev_init: Interface int9-0-0 found
+[3]usb_devfactory_get_device: Using device/interface int9-0-0
+[3]usb_stdhub_enumerate_ports: start
+[3]usb_dev_init: Device ven525-a4a2, dev2-0-0 found
+[3]usb_dev_init: Product: QEMU RNDIS/QEMU USB Network Device
+[3]usb_func_get_if_name: func name=int2-6-0
+[3]usb_dev_init: Interface int2-6-0 found
+[3]usb_devfactory_get_device: Using device/interface int2-6-0
+[3]usb_func_get_if_name: func name=inta-0-0
+[3]usb_dev_init: Interface inta-0-0 found
+[3]usb_dev_init: Function is not supported
+[3]usb_func_get_if_name: func name=inta-0-0
+[3]usb_dev_init: Interface inta-0-0 found
+[3]usb_dev_init: Function is not supported
+[3]cdcether_configure: MAC address is 40:54:0:12:34:57
+[3]usb_dev_config: 0 is ok
+[3]usb_stdhub_enumerate_ports: Port 1: Device configured
+[3]usb_dev_config: 0 is ok
+[3]dw2_rport_init: Device configured
+[3]usbhc_init: dw2hc initialized
+
+[3]forkret: proc 'icode'(1)
+[3]forkret: proc 'idle'(2)
+QEMU: Terminated
+```
+
+```
+[1]forkret: 1: tf=0xffff000038bfded0, ctx=0xffff000038bfde60, lr0=0xffff0000000acb94, lr=0xffff0000000886f4
+[0]usb_dev_init: Device ven409-55aa, dev9-0-0 found
+[1]usb_dev_init: Product: QEMU QEMU USB Hub
+[1]usb_func_get_if_name: func name=int9-0-0
+[1]usb_dev_init: Interface int9-0-0 found
+[1]usb_devfactory_get_device: Using device/interface int9-0-0
+[2]usb_stdhub_enumerate_ports: start
+[3]usb_dev_init: Device ven525-a4a2, dev2-0-0 found
+[2]usb_dev_init: Product: QEMU RNDIS/QEMU USB Network Device
+[2]usb_func_get_if_name: func name=int2-6-0
+[2]usb_dev_init: Interface int2-6-0 found
+[2]usb_devfactory_get_device: Using device/interface int2-6-0
+[2]usb_func_get_if_name: func name=inta-0-0
+[2]usb_dev_init: Interface inta-0-0 found
+[2]usb_dev_init: Function is not supported
+[2]usb_func_get_if_name: func name=inta-0-0
+[2]usb_dev_init: Interface inta-0-0 found
+[2]usb_dev_init: Function is not supported
+[2]cdcether_configure: MAC address is 40:54:0:12:34:57
+[2]usb_dev_config: 0 is ok
+[2]usb_stdhub_enumerate_ports: Port 1: Device configured
+[1]usb_dev_config: 0 is ok
+[1]dw2_rport_init: Device configured
+[1]usbhc_init: dw2hc initialized
+
+[1]forkret: 1: tf=0xffff000038bfded0, ctx=0xffff000038bfde60, lr0=0xffff0000000acb94, lr=0xffff0000000886f4
+[1]forkret: 2: tf=0xffff000038bfded0, ctx=0xffff000038bfd9e0, lr0=0xffff0000000ace78, lr=0xffff0000000ace78
+[1]forkret: 3: tf=0xffff000038bfded0, ctx=0xffff000038bfd9e0, lr0=0xffff0000000acb94, lr=0xffff0000000886f4
+
+```
+
+## プログラムミスでicodeを収めているメモリを上書きしていたためだった
+
+1. (struct dw2_hc)->hublistはstruct list_headへのポインタだがallocせずに使用していた
+2. dev_name_serviceのオブジェクトを作成せずに使用していた
+
+[発見までのデバッグ記録](debug_forkret.md)
+
+```
+qemu-system-aarch64 -M raspi3b -nographic -serial null -serial mon:stdio -drive file=obj/sd.img,if=sd,format=raw -netdev user,id=net0,hostfwd=tcp::8080-:80 -device usb-net,netdev=net0  -kernel obj/kernel8.img
+[3]free_range: 0xffff00000034b000 ~ 0xffff00003b400000, 241845 pages
+[3]console_init: devsw[1].termios: 0xffff00003b3ff000
+[3]clock_init: clock init ok
+[3]rand_init: rand_init ok
+[3]init_vfssw: init_vfssw ok
+mountinit ok
+[3]install_rootfs: install_rootfs ok
+pagecache_init ok
+[3]timer_init: timerfreq = 0x3b9aca0
+[2]timer_init: timerfreq = 0x3b9aca0
+[1]timer_init: timerfreq = 0x3b9aca0
+[2]main: cpu 2 init finished
+[3]main: cpu 3 init finished
+[1]main: cpu 1 init finished
+[0]timer_init: timerfreq = 0x3b9aca0
+[0]main: cpu 0 init finished
+[3]emmc_card_init: poweron
+[3]emmc_issue_command_int: rrror occured whilst waiting for command complete interrupt
+[1]emmc_card_reset: found valid version 2.00 SD card
+[2]dev_init: partition[0]: LBA=0x800, #SECS=0x20000
+[2]dev_init: partition[1]: LBA=0x20800, #SECS=0xf0000
+[2]dev_init: partition[2]: LBA=0x110800, #SECS=0xef800
+[3]iinit: sb: size 100000 nblocks 99835 ninodes 1024 nlog 126 logstart 2 inodestart 128 bmapstart 161
+[2]initlog: init log ok
+[3]usb_dev_init: Device ven409-55aa, dev9-0-0 found
+[3]usb_dev_init: Product: QEMU QEMU USB Hub
+[3]usb_func_get_if_name: func name=int9-0-0
+[3]usb_dev_init: Interface int9-0-0 found
+[3]usb_devfactory_get_device: Using device/interface int9-0-0
+[1]usb_dev_init: Device ven525-a4a2, dev2-0-0 found
+[3]usb_dev_init: Product: QEMU RNDIS/QEMU USB Network Device
+[3]usb_func_get_if_name: func name=int2-6-0
+[3]usb_dev_init: Interface int2-6-0 found
+[3]usb_devfactory_get_device: Using device/interface int2-6-0
+[3]usb_func_get_if_name: func name=inta-0-0
+[3]usb_dev_init: Interface inta-0-0 found
+[3]usb_dev_init: Function is not supported
+[3]usb_func_get_if_name: func name=inta-0-0
+[3]usb_dev_init: Interface inta-0-0 found
+[3]usb_dev_init: Function is not supported
+[1]cdcether_configure: MAC address is 40:54:0:12:34:57
+[1]usb_dev_config: 0 is ok
+[1]usb_stdhub_enumerate_ports: Port 1: Device configured
+[3]usb_dev_config: 0 is ok
+[3]dw2_rport_init: Device configured
+[3]usbhc_init: dw2hc initialized
+
+[2]mount: source: /dev/sdc3, target: /mnt, type: ext2, flags: 0x0
+
+[2]fileopen: cant namei /etc/issue
+Welcome to xv6 2022-06-26 (musl) mini tty
+
+mini login: root
+Password:
+[0]fileopen: cant namei /etc/profile
+[0]fileopen: cant namei /.profile
+# ls -l
+total 5
+drwxrwxr-x 1 root root 1664 Nov 22  2022 bin
+drwxrwxr-x 1 root root  384 Nov 22  2022 dev
+drwxrwxr-x 1 root root  320 Nov 22  2022 etc
+drwxrwxr-x 1 root root  192 Nov 22  2022 home
+drwxrwxrwx 1 root root  256 Nov 22  2022 lib
+drwxrwxr-x 3 root root 4096 Nov 22  2022 mnt
+-rwxr-xr-x 1 root root   94 Nov 22  2022 test.txt
+drwxrwxr-x 1 root root  256 Nov 22  2022 usr
+#
 ```

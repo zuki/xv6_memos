@@ -29,6 +29,7 @@
 - [Ext2ファイルシステムをサポート](ext2.md)
 - [mount/umountコマンドをサポート](mount.md)
 - [USB機能の追加の試み](usb.md)
+  - [発見までのデバッグ記録](debug_forkret.md)
 - [VIM追加の試み](vim.md)
 - [FAT32ファイルシステム](fat.md)
 - [eggman氏によるUSBコントロール転送](eggman.md)
