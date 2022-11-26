@@ -1,1 +1,0 @@
-# Linuxのdrivers/net/usb/Kconfig
