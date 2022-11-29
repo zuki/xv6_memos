@@ -170,6 +170,8 @@
   - [mount/umountコマンドをサポート](rpios_memos/mount.md)
   - [USB機能の追加の試み](rpios_memos/usb.md)
     - [発見までのデバッグ記録](rpios_memos/debug_forkret.md)
+    - [実機で稼働するまで](rpios_memos/not_running_rpi.md)
+    - [xv6とCircleの比較](rpios_memos/rpi_usb_init.md)
   - [VIM追加の試み](rpios_memos/vim.md)
   - [FAT32ファイルシステム](rpios_memos/fat.md)
   - [eggman氏によるUSBコントロール転送](rpios_memos/eggman.md)

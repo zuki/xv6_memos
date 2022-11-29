@@ -1066,3 +1066,148 @@ drwxrwxr-x 3 root root 4096 Nov 22  2022 mnt
 drwxrwxr-x 1 root root  256 Nov 22  2022 usr
 #
 ```
+
+## 実機でusbの初期化に成功
+
+```
+?+?W??k׋?֕?+??"????m?깢?ɵ??????????????2????R??[0]clock_init: clock init ok
+[0]rand_init: rand_init ok
+[0]init_vfssw: init_vfssw ok
+mountinit ok
+[0]install_rootfs: install_rootfs ok
+pagecache_init ok
+[0]timer_init: timerfreq = 0x124f800
+[1]timer_init: timerfreq = 0x124f800
+[2]timer_init: timerfreq = 0x124f800
+[0]main: cpu 0 init finished
+[2]main: cpu 2 init finished
+[1]main: cpu 1 init finished
+[0]emmc_card_init: poweron
+[3]timer_init: timerfreq = 0x124f800
+[3]main: cpu 3 init finished
+[0]emmc_issue_command_int: rrror occured whilst waiting for command complete interrupt
+[0]emmc_card_reset: found valid version 4.xx SD card
+[0]dev_init: partition[0]: LBA=0x800, #SECS=0x20000
+[0]dev_init: partition[1]: LBA=0x20800, #SECS=0xf0000
+[0]dev_init: partition[2]: LBA=0x110800, #SECS=0xef800
+[0]iinit: sb: size 100000 nblocks 99835 ninodes 1024 nlog 126 logstart 2 inodestart 128 bmapstart 161
+[0]initlog: init log ok
+
+== dev_desc: 0xffff000038bdf000 (0xffff000038bdf000) - 0xffff000038bdf012: size=0x12 ==
+
+ffff000038bdf000: 1201 0002 0900 0240 2404 1425 b30b 0000 .......@$..%....
+ffff000038bdf010: 0001                                    ..
+
+
+== config_desc: 0xffff000038bde000 (0xffff000038bde000) - 0xffff000038bde029: size=0x29 ==
+
+ffff000038bde000: 0902 2900 0101 00e0 0109 0400 0001 0900 ..).............
+ffff000038bde010: 0100 0705 8103 0100 0c09 0400 0101 0900 ................
+ffff000038bde020: 0200 0705 8103 0100 0c                  .........
+
+[1]usb_dev_init: Device ven424-2514, dev9-0-2 found
+[1]usb_func_get_if_name: func name=int9-0-1
+[1]usb_dev_init: Interface int9-0-1 found
+[1]usb_dev_init: Function is not supported
+[1]usb_func_get_if_name: func name=int9-0-2
+[1]usb_dev_init: Interface int9-0-2 found
+[1]usb_devfactory_get_device: Using device/interface int9-0-2
+
+== dev_desc: 0xffff000038bdb000 (0xffff000038bdb000) - 0xffff000038bdb012: size=0x12 ==
+
+ffff000038bdb000: 1201 0002 0900 0240 2404 1425 b30b 0000 .......@$..%....
+ffff000038bdb010: 0001                                    ..
+
+
+== config_desc: 0xffff000038bda000 (0xffff000038bda000) - 0xffff000038bda029: size=0x29 ==
+
+ffff000038bda000: 0902 2900 0101 00e0 0109 0400 0001 0900 ..).............
+ffff000038bda010: 0100 0705 8103 0100 0c09 0400 0101 0900 ................
+ffff000038bda020: 0200 0705 8103 0100 0c                  .........
+
+[1]usb_dev_init: Device ven424-2514, dev9-0-2 found
+[1]usb_func_get_if_name: func name=int9-0-1
+[1]usb_dev_init: Interface int9-0-1 found
+[1]usb_dev_init: Function is not supported
+[1]usb_func_get_if_name: func name=int9-0-2
+[1]usb_dev_init: Interface int9-0-2 found
+[1]usb_devfactory_get_device: Using device/interface int9-0-2
+
+== dev_desc: 0xffff000038bd4000 (0xffff000038bd4000) - 0xffff000038bd4012: size=0x12 ==
+
+ffff000038bd4000: 1201 1002 ff00 ff40 2404 0078 0003 0000 .......@$..x....
+ffff000038bd4010: 0001                                    ..
+
+
+== config_desc: 0xffff000038bd3000 (0xffff000038bd3000) - 0xffff000038bd3027: size=0x27 ==
+
+ffff000038bd3000: 0902 2700 0101 00e0 0109 0400 0003 ff00 ..'.............
+ffff000038bd3010: ff00 0705 8102 0002 0007 0502 0200 0200 ................
+ffff000038bd3020: 0705 8303 1000 04                       .......
+
+[2]usb_dev_init: Device ven424-7800 found
+[2]usb_devfactory_get_device: Using device/interface ven424-7800
+[3]lan7800_init_macaddr: MAC address is b8:27:eb:ab:e8:48
+[3]usb_stdhub_enumerate_ports: Port 1: Device configured
+[2]usb_stdhub_enumerate_ports: Port 1: Device configured
+[3]dw2_rport_init: Device configured
+[3]usbhc_init: dw2hc initialized
+
+[2]mount: source: /dev/sdc3, target: /mnt, type: ext2, flags: 0x0
+
+[0]fileopen: cant namei /etc/issue
+Welcome to xv6 2022-06-26 (musl) mini tty
+
+mini login: root
+Password:
+[1]fileopen: cant namei /etc/profile
+[1]fileopen: cant namei /.profile
+# ls
+bin  dev  etc  home  lib  mnt  test.txt  usr
+# ls -l
+total 5
+drwxrwxr-x 1 root root 1664 Nov 29 17:10 bin
+drwxrwxr-x 1 root root  384 Nov 29 17:10 dev
+drwxrwxr-x 1 root root  320 Nov 29 17:10 etc
+drwxrwxr-x 1 root root  192 Nov 29 17:10 home
+drwxrwxrwx 1 root root  256 Nov 29 17:10 lib
+drwxrwxr-x 3 root root 4096 Nov 29 17:10 mnt
+-rwxr-xr-x 1 root root   94 Nov 29 17:10 test.txt
+drwxrwxr-x 1 root root  256 Nov 29 17:10 usr
+# ls /bin
+bigtest  echo       init   mkfs       mount   pipetest  sigtest3   umount
+cat      getty      login  mmaptest   mysh    sigtest   su         utest
+date     hello-dyn  ls     mmaptest2  passwd  sigtest2  timertest  vi
+# ls /usr/local/bin
+file
+# ls /usr/bin
+'['          cp          fmt         mkdir      printf      size      truncate
+ addr2line   csplit      fold        mkfifo     ptx         sleep     tsort
+ ar          cut         gawk        mknod      pwd         sort      tty
+ as          dash        getlimits   mktemp     ranlib      split     uname
+ awk         date        ginstall    mv         readelf     stat      unexpand
+ b2sum       dcgen       gprof       nice       readlink    stdbuf    uniq
+ base32      dd          groups      nl         realpath    strings   unlink
+ base64      df          head        nm         rm          strip     uptime
+ basename    dir         hostid      nohup      rmdir       stty      users
+ basenc      dircolors   id          nproc      runcon      sum       vdir
+ c++filt     dirname     join        numfmt     sed         sync      wc
+ cat         du          kill        objcopy    seq         tac       who
+ chcon       echo        ld          objdump    sh          tail      whoami
+ chgrp       elfedit     ld.bfd      od         sha224sum   tee       yes
+ chmod       env         link        paste      sha256sum   test
+ chown       expand      ln          pathchk    sha384sum   timeout
+ chroot      expr        logname     pinky      sha512sum   touch
+ cksum       factor      ls          pr         shred       tr
+ comm        false       md5sum      printenv   shuf        true
+# date
+Tue Nov 29 17:13:49 JST 2022
+# whoami
+root
+#
+```
+
+### 途中経過
+
+- [実機で稼働するまで](not_running_rpi.md)
+- [xv6とCircleの比較](rpi_usb_init.md)
