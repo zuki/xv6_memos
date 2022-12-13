@@ -1207,7 +1207,80 @@ root
 #
 ```
 
-### 途中経過
+## QEMUはLAN7800ではなくUSB-CDCを使う
+
+```
+== dev_desc: 0xffff000038bdf000 (0xffff000038bdf000) - 0xffff000038bdf012: size=0x12 ==
+
+ffff000038bdf000: 1201 1001 0900 0008 0904 aa55 0101 0102 ...........U....
+ffff000038bdf010: 0301                                    ..
+
+
+== config_desc: 0xffff000038bde000 (0xffff000038bde000) - 0xffff000038bde019: size=0x19 ==
+
+ffff000038bde000: 0902 1900 0101 00e0 0009 0400 0001 0900 ................
+ffff000038bde010: 0000 0705 8103 0200 ff                  .........
+
+[3]usb_dev_init: Device ven409-55aa, dev9-0-0 found
+[1]usb_dev_init: Product: QEMU QEMU USB Hub
+[1]usb_func_get_if_name: func name=int9-0-0
+[1]usb_dev_init: Interface int9-0-0 found
+[1]usb_devfactory_get_device: Using device/interface int9-0-0
+
+== dev_desc: 0xffff000038bd9000 (0xffff000038bd9000) - 0xffff000038bd9012: size=0x12 ==
+
+ffff000038bd9000: 1201 0002 0200 0040 2505 a2a4 0000 0102 .......@%.......
+ffff000038bd9010: 0a02                                    ..
+
+
+== config_desc: 0xffff000038bd8000 (0xffff000038bd8000) - 0xffff000038bd8050: size=0x50 ==
+
+ffff000038bd8000: 0902 5000 0201 07c0 3209 0400 0001 0206 ..P.....2.......
+ffff000038bd8010: 0005 0524 0010 0105 2406 0001 0d24 0f03 ...$....$....$..
+ffff000038bd8020: 0000 0000 ea05 0000 0007 0581 0310 0020 ...............
+ffff000038bd8030: 0904 0100 000a 0000 0009 0401 0102 0a00 ................
+ffff000038bd8040: 0004 0705 8202 4000 0007 0502 0240 0000 ......@......@..
+
+[2]usb_dev_init: Device ven525-a4a2, dev2-0-0 found
+[2]usb_dev_init: Product: QEMU RNDIS/QEMU USB Network Device
+[2]usb_func_get_if_name: func name=int2-6-0
+[2]usb_dev_init: Interface int2-6-0 found
+[2]usb_devfactory_get_device: Using device/interface int2-6-0
+[2]usb_func_get_if_name: func name=inta-0-0
+[2]usb_dev_init: Interface inta-0-0 found
+[2]usb_dev_init: Function is not supported
+[2]usb_func_get_if_name: func name=inta-0-0
+[2]usb_dev_init: Interface inta-0-0 found
+[2]usb_dev_init: Function is not supported
+
+== str_desc: 0xffff000038bce000 (0xffff000038bce000) - 0xffff000038bce01a: size=0x1a ==
+
+ffff000038bce000: 1a03 3400 3000 3500 3400 3000 3000 3100 ..4.0.5.4.0.0.1.
+ffff000038bce010: 3200 3300 3400 3500 3700                2.3.4.5.7.
+
+[3]cdcether_configure: MAC address is 40:54:0:12:34:57
+[3]usb_stdhub_enumerate_ports: Port 1: Device configured
+[3]dw2_rport_init: Device configured
+[3]usbhc_init: dw2hc initialized
+```
+
+### config descriptorの内容
+
+```
+len type
+09  02 5000 02 01 07 c0 32                Configuration Descriptor
+09  04 00 00 01 02 06 00 05               Interface Descriptor
+05  24 00 1001                            Header Functional Descriptor (CDC固有)
+05  24 06 00 01                           Union Functional Descriptor (CDC固有)
+0d  24 0f 03 00000000 ea05 0000 00        Ethernet Networking Functional descriptor ( CDC固有: cdc11に記述）
+07  05 81 03 1000 20                      Endpoint Descriptor
+09  04 01 00 00 0a 00 00 00               Interface Descriptor
+09  04 01 01 02 0a 00 00 04               Interface Descriptor
+07  05 82 02 4000 00                      Endpoint Descriptor
+07  05 02 02 4000 00                      Endpoint Descriptor
+```
+
+## 途中経過
 
 - [実機で稼働するまで](not_running_rpi.md)
 - [xv6とCircleの比較](rpi_usb_init.md)
