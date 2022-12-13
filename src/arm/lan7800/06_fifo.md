@@ -329,7 +329,83 @@ Offload Enable"ビットと"TCP/UDP Checksum Offload Enable"ビットにより�
 
 > 注意: IPv6はヘッダーチェックサムを持っていません。
 
-チェックサムオフロードの実装については「7.2: チェックサムオフロード」
-(73ページ)を参照し てください。セクション7.2は、特に受信チェックサム
+チェックサムオフロードの実装については「7.2 チェックサムオフロード」
+(73ページ)を参照してください。セクション7.2は、特に受信チェックサム
 オフロードのケースを扱っています。しかし、疑似ヘッダーフォーマットと
 チェックサムの目的は受信と送信のオフロード操作の双方で同じです。
+
+#### 6.2.7.1 構成
+
+[省略]
+
+### 6.2.8 Large Send Offload (LSO)
+
+[省略]
+
+#### 6.2.8.1 構成
+
+[省略]
+
+#### 6.2.8.2 処理
+
+[省略]
+
+### 6.2.9 TX FIFOのフラッシュ
+
+このデバイスではホストによるFCT TX FIFOの全コンテンツのフラッシュが可能
+です。フラッシュがアクティブになると、TX FIFOの内部リードポイントと内部
+ライトポインタがリセット状態に戻されます。
+
+TX FIFOをフラッシュする前には6.2.10で指定されているようにデバイスの
+トランスミッタを停止する必要があります。トランスミッタの停止完了が確認
+されるとFIFO Controller RX FIFO Controlレジスタ（FCT_RX_CTL）の
+FCT TX Enableビットがクリアされ、TX FIFOの動作が停止されます。TX FIFO
+ハードウェアがディセーブル処理を完了するとFCT TX DisabledビットとTX
+Disabled Interrupt（TX_DIS_INT）（有効な場合）がアサートされます。その後、
+FIFO Controller RX FIFO Controlレジスタ（FCT_RX_CTL）のFCT TX Reset
+ビットをセットし、フラッシュ動作を開始させます。このビットはフラッシュ
+動作が完了するとハードウェアによってクリアされます。
+
+> 注意: TX Disabled Interrupt（TX_DIS_INT）は、MAC Transmit Register
+> （MAC_TX）のFCT TX DisabledステータスビットとTransmitter Disabled（TXD）
+> ステータスビットが両方ともクリアされるまでアサートされ続きます。
+
+TX FIFOがフラッシュされた後は6.2.10節に規定されているようにトランス
+ミッタを再スタートすることができます。TX FIFOの動作はFCT TX Enable
+ビットをアサートすることにより再開することができます。
+
+**アプリケーションノート**: バルクアウトEPに保留中のURBがある場合、ソフトウェアはTX FIFOのフラッシュを試みてはいけません。
+
+### 6.2.10 トランスミッタの停止と開始
+
+トランスミッタを停止するには、Hostは以下の手順を実行する必要があります。
+
+1. ソフトウェアはFIFO Controller TX FIFO Contorolレジスタ
+   （FCT_TX_CTL）のFCT TXイネーブルビットをクリアする。
+2. ソフトウェアはFIFO Controller TX FIFO Contorolレジスタ（FCT_TX_CTL）の
+   FCT TX Disabledビットをポーリングし、FCT TXが無効になることを確認する。
+
+   > 注意: MACは現在FCTから送信されているフレームをフレームが送信される
+   > まで読み続けます。フレームが送信されるとFCT TX Disabledビットが
+   > アサートされます。
+
+3. FIFO Controller TX FIFO Contorol（FCT_TX_CTL）のFCT TX Disabled
+   ビットがセットされます。
+4. ソフトウェアはMAC Transmitレジスタ（MAC_TX）のTransmitter Enable
+   （TXEN）ビットをクリアしてMACの送信を停止させます。
+5. ソフトウェアはMAC Transmitレジスタ（MAC_TX）のTransmitter Disabled
+   （TXD）ビットをポーリングしてMACの転送が無効になるこことを確認します。
+6. Transmitter Disabled（TXD）ステータスビットがセットされ、MAC TXが
+   停止したことを示します。
+
+**アプリケーションノート**: FCT TX DisabledビットとTransmitter Disabled（TXD）をポーリングする代わりに、Interrupt Status ジスタ（INT_STS）のTX Disabled Interrupt（TX_DIS_INT）ビットを使用することもできます。
+
+**アプリケーションノート**: デバイスが半二重動作に設定されている場合、FCT TX Enableがクリアされた後、フレームが送信完了する前に衝突が発生する可能性があります。この場合、MACはFCTにアボート信号をアサートし、フレームはFCTにより破棄されます。
+
+TXパスの停止後には、ホストはオプションとして、6.2.9節で示したように
+TX FIFOをフラッシュすることができます。ホストは、MAC Transmitレジスタ
+（MAC_TX）のTransmitter Enable（TXEN）ビットをセットし、続いてFIFO Controller TX FIFO Contorol（FCT_TX_CTL）のFCT TXイネーブルビットを
+セットすることによってトランスミッタを再度有効ににすることができます。
+
+TX FIFOに保留中のフレームがある場合（すなわち、TX FIFOがパージされて
+いない場合）、送信はこのデータで再開されます。
