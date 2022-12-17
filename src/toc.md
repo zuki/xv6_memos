@@ -14,7 +14,7 @@
   - [第6章 FIFOコントローラ](arm/lan7800/06_fifo.md)
   - [第7章 受信フィルタリングエンジン](arm/lan7800/07_rfe.md)
   - [第8章 10/100/1000 Ethernet MAC](arm/lan7800/08_ethernet.md)
-  - [第10章 ギガビットEthernet PHY](arm/lan7800/10_gphy.md)
+  - [第9章 ギガビットEthernet PHY](arm/lan7800/09_gphy.md)
   - [第11章 OTPメモリ](arm/lan7800/11_otp.md)
   - [第12章 リセット](arm/lan7800/12_reset.md)
   - [第15章 レジスタ記述](arm/lan7800/15_register.md)

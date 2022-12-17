@@ -51,10 +51,10 @@ PORは以下のドメインの電圧を測定する5つの独立したPOR回路�
 
 ## 12.3 ライトリセット (LRST)
 
-このリセットはHardware Configurationレジスタ (HW_CFG) のSolt Lite Reset
-(LRST) ビットにより開始されます。これはUSBデバイスコントローラとUSB PHYを
-除くデバイス全体をリセットします。ライトリセットの間、PLLはオフに
-なりません。
+このリセットは[Hardware Configurationレジスタ (HW_CFG)](15_register.md#1513-hardware-configurationレジスタ-hw_cfg) のSolt Lite Reset
+(LRST) ビット(HW_CFG[1])をセットすることにより開始されます。これは
+USBデバイスコントローラとUSB PHYを除くデバイス全体をリセットします。
+ライトリセットの間、PLLはオフになりません。
 
 > 注意: このリセットはEEPROM/OTPからのUSBコンテンツのリロードを引き
 >       起こしません。
@@ -71,8 +71,8 @@ PORは以下のドメインの電圧を測定する5つの独立したPOR回路�
 
 ## 12.4 ソフトリセット (SRST)
 
-ソフトウェアによるリセットはHardware Configurationレジスタ（HW_CFG）の
-Soft Reset (SRST) ビットをセットすることで開始されます。このビットが
+ソフトウェアによるリセットは[Hardware Configurationレジスタ (HW_CFG)](15_register.md#1513-hardware-configurationレジスタ-hw_cfg)の
+Soft Reset (SRST) ビット(HW_CFG[0])をセットすることで開始されます。このビットが
 セットされるとデバイスはUSBバスからソフト的に切り離されます。デバイスが
 切り離されている時間は通常、SuperSpeedで30ms、HS/FSで10msです。この時間が
 経過すると、デバイスは完全にリセットされ、USBバスに再接続されます。
@@ -106,7 +106,7 @@ USB電源が切れるとデバイスはUNPOWERED状態に移行します。UNPOW
 > 注意: UNPOWERED状態から移行した後も内部Ethernet PHYは電力を最小にする
 > ためにリセット状態のままです。
 
-## 12.8 Ethernet PHYソフトウェアリセット
+## 12.7 Ethernet PHYソフトウェアリセット
 
 Ethernet PHYのソフトウェアリセットはPower Management Controlレジスタ
 (PMT_CTL) のPHY Rest (PHY_RST) ビットにより提供されます。このリセットは
