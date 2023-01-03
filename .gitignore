@@ -17,4 +17,9 @@ output
 *.new
 *.old
 
+m7_user_guide
+
+src/rpios_memos/linux_lsusb.md
+src/others/linux_codes
+
 **/book/*

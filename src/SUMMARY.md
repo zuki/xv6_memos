@@ -22,6 +22,8 @@
   - [第11章 OTPメモリ](arm/lan7800/11_otp.md)
   - [第12章 リセット](arm/lan7800/12_reset.md)
   - [第15章 レジスタ記述](arm/lan7800/15_register.md)
+- [M7ファミリーユーザガイド](arm/m7_user_guide/README.md)
+  - [18 USB OTG ハイスピードPHY](arm/m7_user_guide/18_USB_otg.md)
 - [Programmer’s Guide for ARMv8-A](arm/programmer_guide/README.md)
   - [1章 はじめに](arm/programmer_guide/01_intro.md)
   - [2章 ARMv8アーキテクチャとプロセッサ](arm/programmer_guide/02_architect.md)
@@ -109,12 +111,13 @@
 - [A Virtual Filesystem Layer implementation in the XV6 Operating System](articles/vfs_xv6.md)
 - [MIT演習: MMAP](articles/mit_lab_mmap.md)
 
-# その他資料の翻訳
+# その他資料
 
 - [kern/sd.cの関数一覧](others/sd_functions.md)
 - [Linuxのdrivers/net/usb/Kconfig](others/linux_net_usb_kconfig.md)
 - [rpi-osのREADME](others/rpi-os-readme.md)
 - [dashのTOUR文書](others/dash_tour.md)
+- [eggman氏によるUSBコントロール転送](others/eggman.md)
 
 # fudan作業メモ
 
@@ -179,7 +182,7 @@
     - [xv6とCircleの比較](rpios_memos/rpi_usb_init.md)
   - [VIM追加の試み](rpios_memos/vim.md)
   - [FAT32ファイルシステム](rpios_memos/fat.md)
-  - [eggman氏によるUSBコントロール転送](rpios_memos/eggman.md)
+  - [ネットワーク機能](rpios_memos/network.md)
 
 # XV6講義資料の翻訳
 
